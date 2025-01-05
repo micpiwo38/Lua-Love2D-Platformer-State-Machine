@@ -15,7 +15,8 @@ local Player = {
     animation_timer = 0,
     animation_frame = 1,
     animation_speed = 0.2, -- Vitesse de l'animation + plus grand = plus lent
-    animation_speed_run = 0.1
+    animation_speed_run = 0.1,
+    direction = 1, -- pour le flip sprite
 };
 
 --Load datas
