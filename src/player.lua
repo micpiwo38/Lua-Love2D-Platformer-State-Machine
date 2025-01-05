@@ -16,7 +16,9 @@ local Player = {
     animation_frame = 1,
     animation_speed = 0.2, -- Vitesse de l'animation + plus grand = plus lent
     animation_speed_run = 0.1,
-    direction = 1, -- pour le flip sprite
+    direction = 1, -- pour le flip sprite 1 pour la droite et - pour la gauche
+    --Projectiles
+    bullets = {},
 };
 
 --Load datas
@@ -25,6 +27,8 @@ function Player.load_datas()
     Player.sprite_sheet_idle = love.graphics.newImage("img/player_idle.png");
     --Sprite_sheet RUN
     Player.sprite_sheet_run = love.graphics.newImage("img/player_run.png");
+    --Sprite du projectiles
+    Player.sprite_bullet = love.graphics.newImage("img/bullet.png");
     --Tableau de carré pour IDLE
     Player.quads_idle = {
         --Pour idle 4 sprites de 32 * 32
@@ -45,6 +49,17 @@ function Player.load_datas()
     }
 end
 
+--Attack
+function Player.shoot()
+    local bullet = {
+        x = Player.posX + (Player.width / 2) * Player.direction;
+        y = Player.posY + (Player.height / 2) - 20,
+        speed = 500,
+        direction = Player.direction
+    }
+    table.insert(Player.bullets, bullet);
+end
+
 --Update = Player
 function Player.update_player(dt, floor, platforms)
     --le player bouge ?
@@ -53,10 +68,12 @@ function Player.update_player(dt, floor, platforms)
     if love.keyboard.isDown("d") then
         Player.posX = Player.posX + Player.speed * dt;
         is_moving = true;
+        Player.direction = 1;
     end
     if love.keyboard.isDown("q") then
         Player.posX = Player.posX - Player.speed * dt;
         is_moving = true;
+        Player.direction = -1;
     end
 
     --Appliquer la pesanteur
@@ -122,13 +139,28 @@ function Player.update_player(dt, floor, platforms)
         end
     end
 
+    --MAJ Projectiles
+    for i = #Player.bullets, 1, -1 do
+        local bullet = Player.bullets[i];
+        bullet.x = bullet.x + bullet.speed * dt * bullet.direction;
+        --Supprimer le projectile quand il sort de l'ecran
+        if bullet.x < 0 or bullet.x > 800 then
+            table.remove(Player.bullets, i);
+        end
+    end
 end
 
 function Player.draw_player()
+    local scale_x = Player.direction;
     if Player.state == "idle" then
-        love.graphics.draw(Player.sprite_sheet_idle, Player.quads_idle[Player.animation_frame], Player.posX, Player.posY);
+        love.graphics.draw(Player.sprite_sheet_idle, Player.quads_idle[Player.animation_frame], Player.posX, Player.posY, 0, scale_x, 1, 16, 0);
     elseif Player.state == "moving" then
-        love.graphics.draw(Player.sprite_sheet_run, Player.quads_run[Player.animation_frame], Player.posX, Player.posY);
+        love.graphics.draw(Player.sprite_sheet_run, Player.quads_run[Player.animation_frame], Player.posX, Player.posY, 0, scale_x, 1, 16, 0);
+    end
+
+    --Dessiner les projectiles
+    for _, bullet in ipairs(Player.bullets) do
+        love.graphics.draw(Player.sprite_bullet, bullet.x, bullet.y);
     end
 end
 
